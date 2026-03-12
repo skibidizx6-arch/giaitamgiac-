@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giải Tam Giác</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.3);
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 {
+            text-align: center;
+            color: #ff3333;
+            text-transform: uppercase;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: #fff;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #ff3333;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        .form-group {
+            display: none;
+            padding: 10px;
+            border: 1px dashed #555;
+            margin-bottom: 10px;
+        }
+        .active {
+            display: block;
+        }
+        #result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #000;
+            border-left: 4px solid #4d94ff;
+            min-height: 50px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        /* Các màu sắc tương ứng với \033 trong Python của bạn */
+        .color-blue { color: #4d94ff; }
+        .color-red { color: #ff4d4d; }
+        .color-green { color: #4dff4d; }
+        .color-yellow { color: #ffff4d; }
+        .color-cyan { color: #4dffff; }
+        
+        canvas {
+            background-color: #111;
+            border: 1px solid #333;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Giải Tam Giác</h2>
+    
+    <label for="mode">Muốn tính cái nào đây:</label>
+    <select id="mode" onchange="switchMode()">
+        <option value="0">-- Chọn một cách giải --</option>
+        <option value="1">1. Biết 2 cạnh và góc xen giữa</option>
+        <option value="2">2. Biết 1 cạnh và 2 góc</option>
+        <option value="3">3. Thử chọn sai xem sao...</option>
+    </select>
+
+    <div id="form1" class="form-group">
+        <div class="color-blue">CÓ 2 CẠNH VÀ 1 GÓC XEN GIỮA RỒI PHẢI KHÔNG</div>
+        <input type="number" id="a1" placeholder="Độ dài cạnh a" step="any">
+        <input type="number" id="b1" placeholder="Độ dài cạnh b" step="any">
+        <input type="number" id="c_angle1" placeholder="Số đo góc C (độ)" step="any">
+    </div>
+
+    <div id="form2" class="form-group">
+        <div class="color-blue">CÓ 1 CẠNH VÀ 2 GÓC RỒI PHẢI KHÔNG</div>
+        <input type="number" id="a2" placeholder="Độ dài cạnh a" step="any">
+        <input type="number" id="b_angle2" placeholder="Số đo góc B (độ)" step="any">
+        <input type="number" id="c_angle2" placeholder="Số đo góc C (độ)" step="any">
+    </div>
+
+    <button onclick="calculate()">TÍNH TOÁN</button>
+
+    <div id="result-box">Kết quả sẽ hiển thị ở đây...</div>
+    <canvas id="triangleCanvas" width="400" height="250" style="display:none;"></canvas>
+</div>
+
+<script>
+    function switchMode() {
+        const mode = document.getElementById('mode').value;
+        document.getElementById('form1').classList.remove('active');
+        document.getElementById('form2').classList.remove('active');
+        document.getElementById('triangleCanvas').style.display = 'none';
+        document.getElementById('result-box').innerHTML = 'Đang chờ dữ liệu...';
+        
+        if (mode === '1') document.getElementById('form1').classList.add('active');
+        if (mode === '2') document.getElementById('form2').classList.add('active');
+    }
+
+    function calculate() {
+        const mode = document.getElementById('mode').value;
+        const resultBox = document.getElementById('result-box');
+        const canvas = document.getElementById('triangleCanvas');
+
+        if (mode === '0') {
+            resultBox.innerHTML = '<span class="color-red">Vui lòng chọn cách tính!</span>';
+            return;
+        }
+
+        if (mode !== '1' && mode !== '2') {
+            resultBox.innerHTML = '<span class="color-blue">chỉ có 1 và 2 thôi không còn cái khác đâu làm lại đi ditmemay</span>';
+            canvas.style.display = 'none';
+            return;
+        }
+
+        let a, b, c, goc_a, goc_b, goc_c, chuvi, S, r;
+
+        if (mode === '1') {
+            a = parseFloat(document.getElementById('a1').value);
+            b = parseFloat(document.getElementById('b1').value);
+            goc_c = parseFloat(document.getElementById('c_angle1').value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(goc_c) || a<=0 || b<=0 || goc_c<=0 || goc_c>=180) {
+                resultBox.innerHTML = '<span class="color-red">Nhập số liệu chưa hợp lý! Kiểm tra lại đi.</span>';
+                return;
+            }
+
+            let goc_c_ran = goc_c * Math.PI / 180;
+            c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2) - 2 * a * b * Math.cos(goc_c_ran));
+            
+            let sin_b = (b * Math.sin(goc_c_ran)) / c;
+            goc_b = Math.asin(sin_b) * (180 / Math.PI);
+            goc_a = 180 - goc_b - goc_c;
+        } 
+        else if (mode === '2') {
+            a = parseFloat(document.getElementById('a2').value);
+            goc_b = parseFloat(document.getElementById('b_angle2').value);
+            goc_c = parseFloat(document.getElementById('c_angle2').value);
+
+            if (isNaN(a) || isNaN(goc_b) || isNaN(goc_c) || a<=0 || goc_b<=0 || goc_c<=0 || (goc_b+goc_c)>=180) {
+                resultBox.innerHTML = '<span class="color-red">Nhập số liệu chưa hợp lý (tổng 2 góc phải < 180)!</span>';
+                return;
+            }
+
+            goc_a = 180 - goc_b - goc_c;
+            
+            let goc_a_ran = goc_a * Math.PI / 180;
+            let goc_b_ran = goc_b * Math.PI / 180;
+            let goc_c_ran = goc_c * Math.PI / 180;
+
+            let sin_a1 = Math.sin(goc_a_ran);
+            let sin_b1 = Math.sin(goc_b_ran);
+            let sin_c1 = Math.sin(goc_c_ran);
+
+            b = (a * sin_b1) / sin_a1;
+            c = (a * sin_c1) / sin_a1;
+        }
+
+        // Tính toán chung (Chu vi, diện tích, bán kính nội tiếp)
+        chuvi = a + b + c;
+        let P = chuvi / 2;
+        S = Math.sqrt(P * (P - a) * (P - b) * (P - c));
+        r = S / P;
+
+        // In kết quả theo đúng màu sắc
+        resultBox.innerHTML = `
+            <div class="color-red">tam giác đó có độ dài các cạnh là:</div>
+            a = ${a.toFixed(2)}<br>
+            b = ${b.toFixed(2)}<br>
+            c = ${c.toFixed(2)}<br><br>
+            
+            <div class="color-green">tam giác đó có số đo các góc là:</div>
+            góc a = ${goc_a.toFixed(2)}<br>
+            góc b = ${goc_b.toFixed(2)}<br>
+            góc c = ${goc_c.toFixed(2)}<br><br>
+            
+            <div class="color-yellow">tam giác đó có chu vi là:</div>
+            ${chuvi.toFixed(4)}<br><br>
+            
+            <div class="color-blue">tam giác đó có diện tích là:</div>
+            ${S.toFixed(4)}<br><br>
+            
+            <div class="color-cyan">bán kính đường tròn nội tiếp của tam giác đó là:</div>
+            ${r.toFixed(4)}
+        `;
+
+        drawTriangle(a, b, c, goc_a);
+    }
+
+    // Tính năng vẽ tam giác lên Canvas
+    function drawTriangle(a, b, c, angleA_deg) {
+        const canvas = document.getElementById('triangleCanvas');
+        canvas.style.display = 'block';
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Quy ước: Điểm A ở (0,0), cạnh c nằm trên trục X
+        const angleA_rad = angleA_deg * Math.PI / 180;
+        const ptA = {x: 0, y: 0};
+        const ptB = {x: c, y: 0};
+        const ptC = {x: b * Math.cos(angleA_rad), y: b * Math.sin(angleA_rad)};
+
+        // Tìm bounding box để scale vừa khung
+        const minX = Math.min(ptA.x, ptB.x, ptC.x);
+        const maxX = Math.max(ptA.x, ptB.x, ptC.x);
+        const minY = Math.min(ptA.y, ptB.y, ptC.y);
+        const maxY = Math.max(ptA.y, ptB.y, ptC.y);
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        const padding = 30;
+        const scale = Math.min((canvas.width - padding*2) / width, (canvas.height - padding*2) / height);
+
+        const offsetX = (canvas.width - width * scale) / 2 - minX * scale;
+        const offsetY = (canvas.height - height * scale) / 2 - minY * scale;
+
+        ctx.beginPath();
+        // Lật trục Y vì canvas vẽ Y hướng xuống
+        ctx.moveTo(ptA.x * scale + offsetX, canvas.height - (ptA.y * scale + offsetY));
+        ctx.lineTo(ptB.x * scale + offsetX, canvas.height - (ptB.y * scale + offsetY));
+        ctx.lineTo(ptC.x * scale + offsetX, canvas.height - (ptC.y * scale + offsetY));
+        ctx.closePath();
+
+        // Đổ màu
+        ctx.strokeStyle = '#ff3333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 51, 51, 0.2)';
+        ctx.fill();
+    }
+</script>
+
+</body>
+</html>
